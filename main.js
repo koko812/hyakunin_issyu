@@ -1,3 +1,17 @@
+let voices = null
+let en_voices = null
+
+const load_voices = () => {
+    voices = speechSynthesis.getVoices()
+    en_voices = voices.filter(voice => voice.lang === 'en-US')
+    for (const voice of voices) {
+        // なんかロードが遅くて表示されてないので，書くところを工夫したほうがいいかもしれないな
+        // 別 javascript に書くのもちょっと考えたけど，受け渡しがよくわからんのでパス
+        console.log(voice.name, voice.lang);
+    }
+    console.log(voices, en_voices);
+}
+
 const speak = (text) => {
     // こういう API の呼び出しを脳死で書くのではなくて，構造(?)を意識しながら，かけるようになりたい
     const utterance = new SpeechSynthesisUtterance(text)
@@ -6,21 +20,16 @@ const speak = (text) => {
 
     // これを指定するだけで英語も喋ってくれるんだが，voice のしていはひつようなんだろうか？？
     // 多分その言語のデフォルトが指定されるので，声を変えたい時は便利なのか
-    const voices = speechSynthesis.getVoices()
-    const en_voices = voices.filter(voice => voice.lang === 'en-US')
-    for (const voice of voices) {
-        // なんかロードが遅くて表示されてないので，書くところを工夫したほうがいいかもしれないな
-        // 別 javascript に書くのもちょっと考えたけど，受け渡しがよくわからんのでパス
-        console.log(voice.name, voice.lang);
-    }
-    console.log(voices, en_voices);
-
     utterance.lang = "en-EN"
     utterance.voice = en_voices[3]
     speechSynthesis.speak(utterance)
 }
 
-window.onload = () => {
+// 読み込み前に動かしてるつもりだが，音が入ってない？？なんで？？
+// async とか使うのはどうなん？って感じもするが，使ってみるか
+// 無理だった
+window.onload = async () => {
+    await new Promise(r => load_voices)
     document.getElementById('start').onclick = (e) => {
         speak('hello world')
     }
