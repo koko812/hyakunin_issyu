@@ -10,7 +10,7 @@ const speak = (text) => {
     const en_voices = voices.filter(voice => voice.lang === 'en-US')
     // 日本語音声は１，2種類しかないみたい，英語は少なくとも 5つはあるんだが
     // やっぱりずんだもんを導入するのがいいかもしれない
-    const jp_voices = voices.filter(voice => voice.lang === ('jp-JP'||'ja-JP'))
+    const jp_voices = voices.filter(voice => voice.lang === ('jp-JP' || 'ja-JP'))
     for (const voice of voices) {
         // なんかロードが遅くて表示されてないので，書くところを工夫したほうがいいかもしれないな
         // 別 javascript に書くのもちょっと考えたけど，受け渡しがよくわからんのでパス
@@ -24,28 +24,66 @@ const speak = (text) => {
     speechSynthesis.speak(utterance)
 }
 
-const sleep= (duration) => new Promise(r => setTimeout(r, duration))
-    
+const sleep = (duration) => new Promise(r => setTimeout(r, duration))
+
+const cardWidth = 75
+const cardHeight = 100
+const col = 4
+const row = 3
 
 // poemString の加工が必要になる（init) に入れればいいか？？
 // 音声のロードも init に入れればどうにかなる説ある？同じような気がしなくもないが
 const poemList = []
-const  init = async () => {
+const init = async () => {
     for (const poemLine of poemString.split('\n')) {
         // 配列操作がよくわからなくてつらい
         // 三個目までとそれ以降で分割して保存したいだけなんや
         const poemChunks = poemLine.split('　')
         const speechText = poemChunks.join('，')
         // 切り出しは slice, join は python とほぼ同じ，覚えておけ！！
-        const lowText = poemChunks.slice(3,5).join('')
+        const lowText = poemChunks.slice(3, 5).join('')
         //console.log(poemChunks);
         //console.log(speechText);
         //console.log(lowText);
-        poemList.push({speechText, lowText})
+        poemList.push({ speechText, lowText })
     }
     // 変数そのまま辞書に代入したら，勝手に辞書形式になってくれて便利
     //console.log(poemList[0]);
+
+    // 俳句の順番シャッフル
+    for (let i = 0; i < poemList.length; i++) {
+        const index = Math.trunc(Math.random() * (poemList.length - i)) + i
+        //[poemList[i], poemList[index]] =[poemList[index], poemList[i]]
+        // この書き方はなんかダメだとコンパイラに言われる (t-kihiraのやり方)
+        const bufPoem = poemList[i]
+        poemList[i] = poemList[index]
+        poemList[index] = bufPoem
+    }
+
+    // なんかもうこの辺で id 指定ミスとかないか知らせて欲しいよね，結構よくやるので
+    // まあ先にこっちで決め打ち id した時に若干ウザいかもしれないけど
+    const container = document.getElementById('container')
+    for (let i = 0; i < 12; i++) {
+        const div = document.createElement('div')
+        container.appendChild(div)
+        div.style.position = `absolute`
+        // また px をつけ忘れていた
+        div.style.width = `${cardWidth - 2}px`
+        div.style.height = `${cardHeight - 2}px`
+        div.style.left = `${cardWidth * Math.trunc(i % col)}px`
+        div.style.top = `${cardHeight * Math.trunc(i / col)}px`
+        div.style.display = 'flex'
+        div.style.alignItems = 'center'
+        div.style.border = `solid 2px #0c6`
+        div.style.boxSizing = `border-box`
+        div.style.fontFamily = 'serif'
+        div.style.writingMode = 'vertical-rl'
+        div.style.fontSize = '17px'
+        div.style.lineHeight = '23px'
+        div.textContent = poemList[i].lowText
+    }
 }
+
 window.onload = () => {
     init()
     document.getElementById('start').onclick = (e) => {
