@@ -34,6 +34,7 @@ const row = 3
 // poemString の加工が必要になる（init) に入れればいいか？？
 // 音声のロードも init に入れればどうにかなる説ある？同じような気がしなくもないが
 const poemList = []
+const solutionList = []
 const init = async () => {
     for (const poemLine of poemString.split('\n')) {
         // 配列操作がよくわからなくてつらい
@@ -51,7 +52,7 @@ const init = async () => {
     //console.log(poemList[0]);
 
     // 俳句の順番シャッフル
-    for (let i = 0; i < poemList.length; i++) {
+    for (let i = 0; i < poemList.length - 1; i++) {
         const index = Math.trunc(Math.random() * (poemList.length - i)) + i
         //[poemList[i], poemList[index]] =[poemList[index], poemList[i]]
         // この書き方はなんかダメだとコンパイラに言われる (t-kihiraのやり方)
@@ -78,16 +79,52 @@ const init = async () => {
         div.style.boxSizing = `border-box`
         div.style.fontFamily = 'serif'
         div.style.writingMode = 'vertical-rl'
-        div.style.fontSize = '17px'
+        div.style.fontSize = '18px'
         div.style.lineHeight = '23px'
         div.textContent = poemList[i].lowText
+        poemList[i].element = div
+        // これは, poemList 自体はすでに辞書として定義されてるので，.element でも問題なく代入できる
+        solutionList.push(poemList[i])
+        div.onpointerdown = (e) => {
+            // この ifを入れとかないと，resolver の中身が定義される前に呼び出されて，エラーを吐かれる
+            if (resolver) {
+                resolver(poemList[i])
+            }
+        }
+    }
+
+    for (let i = 0; i < solutionList.length - 1; i++) {
+        const index = Math.trunc(Math.random() * (solutionList.length - i)) + i
+        const bufPoem = solutionList[i]
+        solutionList[i] = solutionList[index]
+        solutionList[index] = bufPoem
     }
 }
 
-window.onload = () => {
+// この resolver の挙動を心の底から理解できていないのが気持ち悪い
+// この resolver の引数に何かを入れたら，その resolver の呼び出し元に何かが入って
+// そこからその後の処理に進むというのはわかってるんだけど
+let resolver = null
+window.onload = async () => {
     init()
-    document.getElementById('start').onclick = (e) => {
-        speak('あきのたの　かりほのいほの　とまをあらみ　わがころもでは　つゆにぬれつつ')
+    document.getElementById('start').onclick = async (e) => {
+        const message = document.getElementById('message')
+        message.innerHTML = 'スタート！！'
+        speak('はじまります')
+        for (solution of solutionList) {
+            await sleep(2000)
+            speak(solution.speechText)
+            message.innerHTML = ''
+            const answer = await new Promise(resolve => {
+                resolver = resolve
+            })
+            if (answer === solution) {
+                message.innerHTML = '正解！'
+                solution.element.style.display = 'none'
+            } else {
+                message.innerHTML = 'お手つき！'
+            }
+        }
     }
 }
 
@@ -136,7 +173,7 @@ const poemString = `あきのたの　かりほのいほの　とまをあらみ
 ちぎりきな　かたみにそでを　しぼりつつ　すゑのまつやま　なみこさじとは	
 あひみての　のちのこころに　くらぶれば　むかしはものを　おもはざりけり	
 あふことの　たえてしなくは　なかなかに　ひとをもみをも　うらみざらまし	
-あはれとも　いふべき人は　思ほえで　身のいたづらに　なりぬべきかな	
+あはれとも　いふべきひとは　おもほえで　みのいたづらに　なりぬべきかな	
 ゆらのとを　わたるふなびと　かぢをたえ　ゆくへもしらぬ　こひのみちかな	
 やへむぐら　しげれるやどの　さびしきに　ひとこそみえね　あきはきにけり	
 かぜをいたみ　いはうつなみの　おのれのみ　くだけてものを　おもふころかな	
