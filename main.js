@@ -34,7 +34,7 @@ const row = 3
 // poemString の加工が必要になる（init) に入れればいいか？？
 // 音声のロードも init に入れればどうにかなる説ある？同じような気がしなくもないが
 const poemList = []
-const solutionList = []
+let solutionList = []
 const init = async () => {
     for (const poemLine of poemString.split('\n')) {
         // 配列操作がよくわからなくてつらい
@@ -64,7 +64,7 @@ const init = async () => {
     // なんかもうこの辺で id 指定ミスとかないか知らせて欲しいよね，結構よくやるので
     // まあ先にこっちで決め打ち id した時に若干ウザいかもしれないけど
     const container = document.getElementById('container')
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 4; i++) {
         const div = document.createElement('div')
         container.appendChild(div)
         div.style.position = `absolute`
@@ -111,20 +111,39 @@ window.onload = async () => {
         const message = document.getElementById('message')
         message.innerHTML = 'スタート！！'
         speak('はじまります')
-        for (solution of solutionList) {
-            await sleep(2000)
-            speak(solution.speechText)
-            message.innerHTML = ''
-            const answer = await new Promise(resolve => {
-                resolver = resolve
-            })
-            if (answer === solution) {
-                message.innerHTML = '正解！'
-                solution.element.style.display = 'none'
-            } else {
-                message.innerHTML = 'お手つき！'
+        let cnt = 0;
+        while (solutionList.length) {
+            if (cnt>0) {
+                speak('もういっしゅう，よませていただきます')
+                await sleep(2000)
             }
+            for (solution of solutionList) {
+                await sleep(2000)
+                speak(solution.speechText)
+                message.innerHTML = ''
+                const answer = await new Promise(resolve => {
+                    resolver = resolve
+                })
+                if (speechSynthesis.speaking) {
+                    speechSynthesis.cancel()
+                }
+                if (answer === solution) {
+                    message.innerHTML = '正解！'
+                    solution.element.style.display = 'none'
+                    solution.isAnsewered = true
+                } else {
+                    // これお手つきに入ったら２度と戻れなさそうなのが困るよね
+                    // そんなことはなかった
+                    message.innerHTML = 'お手つき！'
+                }
+            }
+            solutionList = solutionList.filter(v => !v.isAnsewered)
+            console.log(solutionList);
+            cnt++;
+            await sleep(1000)
         }
+        speak('すばらしいカルタさばきでした。おつかれさまです')
+        message.innerHTML = 'おしまい！'
     }
 }
 
@@ -149,7 +168,7 @@ const poemString = `あきのたの　かりほのいほの　とまをあらみ
 すみのえの　きしによるなみ　よるさへや　ゆめのかよひぢ　ひとめよくらむ	
 なにはがた　みじかきあしの　ふしのまも　あはでこのよを　すぐしてよとや	
 わびぬれば　いまはたおなじ　なにはなる　みをつくしても　あはむとぞおもふ	
-いまこむと　いひしばかりに　ながつきの　ありあけのつきを　まちいでつるかな	
+いまこむと　いひしばかりに　ながつきの　ありあけのつきを　まちでつるかな	
 ふくからに　あきのくさきの　しをるれば　むべやまかぜを　あらしといふらむ	
 つきみれば　ちぢにものこそ　かなしけれ　わがみひとつの　あきにはあらねど	
 このたびは　ぬさもとりあへず　たむけやま　もみぢのにしき　かみのまにまに	
