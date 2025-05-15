@@ -1,17 +1,3 @@
-let voices = null
-let en_voices = null
-
-const load_voices = () => {
-    voices = speechSynthesis.getVoices()
-    en_voices = voices.filter(voice => voice.lang === 'en-US')
-    for (const voice of voices) {
-        // なんかロードが遅くて表示されてないので，書くところを工夫したほうがいいかもしれないな
-        // 別 javascript に書くのもちょっと考えたけど，受け渡しがよくわからんのでパス
-        console.log(voice.name, voice.lang);
-    }
-    console.log(voices, en_voices);
-}
-
 const speak = (text) => {
     // こういう API の呼び出しを脳死で書くのではなくて，構造(?)を意識しながら，かけるようになりたい
     const utterance = new SpeechSynthesisUtterance(text)
@@ -20,23 +6,55 @@ const speak = (text) => {
 
     // これを指定するだけで英語も喋ってくれるんだが，voice のしていはひつようなんだろうか？？
     // 多分その言語のデフォルトが指定されるので，声を変えたい時は便利なのか
-    utterance.lang = "en-EN"
-    utterance.voice = en_voices[3]
+    const voices = speechSynthesis.getVoices()
+    const en_voices = voices.filter(voice => voice.lang === 'en-US')
+    // 日本語音声は１，2種類しかないみたい，英語は少なくとも 5つはあるんだが
+    // やっぱりずんだもんを導入するのがいいかもしれない
+    const jp_voices = voices.filter(voice => voice.lang === ('jp-JP'||'ja-JP'))
+    for (const voice of voices) {
+        // なんかロードが遅くて表示されてないので，書くところを工夫したほうがいいかもしれないな
+        // 別 javascript に書くのもちょっと考えたけど，受け渡しがよくわからんのでパス
+        console.log(voice.name, voice.lang);
+    }
+    //console.log(voices, en_voices);
+    console.log(voices, jp_voices);
+
+    utterance.lang = "jp-JP"
+    utterance.voice = jp_voices[0]
     speechSynthesis.speak(utterance)
 }
 
-// 読み込み前に動かしてるつもりだが，音が入ってない？？なんで？？
-// async とか使うのはどうなん？って感じもするが，使ってみるか
-// 無理だった
-window.onload = async () => {
-    await new Promise(r => load_voices)
+const sleep= (duration) => new Promise(r => setTimeout(r, duration))
+    
+
+// poemString の加工が必要になる（init) に入れればいいか？？
+// 音声のロードも init に入れればどうにかなる説ある？同じような気がしなくもないが
+const poemList = []
+const  init = async () => {
+    for (const poemLine of poemString.split('\n')) {
+        // 配列操作がよくわからなくてつらい
+        // 三個目までとそれ以降で分割して保存したいだけなんや
+        const poemChunks = poemLine.split('　')
+        const speechText = poemChunks.join('，')
+        // 切り出しは slice, join は python とほぼ同じ，覚えておけ！！
+        const lowText = poemChunks.slice(3,5).join('')
+        //console.log(poemChunks);
+        //console.log(speechText);
+        //console.log(lowText);
+        poemList.push({speechText, lowText})
+    }
+    // 変数そのまま辞書に代入したら，勝手に辞書形式になってくれて便利
+    //console.log(poemList[0]);
+}
+window.onload = () => {
+    init()
     document.getElementById('start').onclick = (e) => {
-        speak('hello world')
+        speak('あきのたの　かりほのいほの　とまをあらみ　わがころもでは　つゆにぬれつつ')
     }
 }
 
 
-const poemString = ` あきのたの　かりほのいほの　とまをあらみ　わがころもでは　つゆにぬれつつ	
+const poemString = `あきのたの　かりほのいほの　とまをあらみ　わがころもでは　つゆにぬれつつ
 はるすぎて　なつきにけらし　しろたへの　ころもほすてふ　あまのかぐやま	
 あしびきの　やまどりのをの　しだりをの　ながながしよを　ひとりかもねむ	
 たごのうらに　うちいでてみれば　しろたへの　ふじのたかねに　ゆきはふりつつ	
