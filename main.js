@@ -30,6 +30,8 @@ const cardWidth = 75
 const cardHeight = 100
 const col = 4
 const row = 3
+// これやっぱり，基本情報はここにまとめておいた方がいいよね
+const poemNumber = 12
 
 // poemString の加工が必要になる（init) に入れればいいか？？
 // 音声のロードも init に入れればどうにかなる説ある？同じような気がしなくもないが
@@ -64,7 +66,7 @@ const init = async () => {
     // なんかもうこの辺で id 指定ミスとかないか知らせて欲しいよね，結構よくやるので
     // まあ先にこっちで決め打ち id した時に若干ウザいかもしれないけど
     const container = document.getElementById('container')
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < poemNumber; i++) {
         const div = document.createElement('div')
         container.appendChild(div)
         div.style.position = `absolute`
@@ -113,7 +115,7 @@ window.onload = async () => {
         speak('はじまります')
         let cnt = 0;
         while (solutionList.length) {
-            if (cnt>0) {
+            if (cnt > 0) {
                 speak('もういっしゅう，よませていただきます')
                 await sleep(2000)
             }
